@@ -1,0 +1,19 @@
+[package]
+name = "syner"
+version = "0.1.0"
+edition = "2021"
+authors = ["Leon Camus <leon.c@gmx.de>"]
+keywords = ["proc_macro", "procmacro", "syn", "syner", "derive"]
+description = "A procedural macro to generate a parser for attributes from a struct"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/28Smiles/syner"
+
+[dependencies]
+syner_derive = { path = "syner_derive", version = "0.1.0" }
+syn = "1"
+proc-macro2 = "1"
+
+[dev-dependencies]
+quote = "1"
+trybuild = "1.0"

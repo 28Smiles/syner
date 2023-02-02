@@ -1,0 +1,17 @@
+error: Expected a named field
+ --> tests/fail/positional.rs:4:19
+  |
+4 | struct Positional(usize, bool, String);
+  |                   ^^^^^
+
+error: Expected a named field
+ --> tests/fail/positional.rs:4:26
+  |
+4 | struct Positional(usize, bool, String);
+  |                          ^^^^
+
+error: Expected a named field
+ --> tests/fail/positional.rs:4:32
+  |
+4 | struct Positional(usize, bool, String);
+  |                                ^^^^^^

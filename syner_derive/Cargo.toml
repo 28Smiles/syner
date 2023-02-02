@@ -1,0 +1,18 @@
+[package]
+name = "syner_derive"
+version = "0.1.0"
+edition = "2021"
+authors = ["Leon Camus <leon.c@gmx.de>"]
+keywords = ["proc_macro", "procmacro", "syn", "syner", "derive"]
+description = "A procedural macro to generate a parser for attributes from a struct"
+license = "MIT"
+readme = "../README.md"
+repository = "https://github.com/28Smiles/syner"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+proc-macro2 = "1.0"
+syn = "1.0"
