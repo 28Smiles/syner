@@ -17,10 +17,40 @@ fn extract_generic_arg_from_path(generic: &syn::PathArguments) -> &syn::Type {
     panic!("Expected a generic argument");
 }
 
+fn parse_default_or_default_function(attrs: &[syn::Attribute]) -> (bool, Option<syn::Expr>) {
+    for attr in attrs {
+        if let Ok(syn::Meta::List(syn::MetaList { path, nested, .. })) = attr.parse_meta() {
+            if path.is_ident("syner") {
+                for nested in nested {
+                    match nested {
+                        syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue {
+                            path,
+                            lit: syn::Lit::Str(lit),
+                            ..
+                        })) => {
+                            if path.is_ident("default") {
+                                return (true, Some(syn::parse_str(&lit.value()).unwrap()));
+                            }
+                        }
+                        syn::NestedMeta::Meta(syn::Meta::Path(path)) => {
+                            if path.is_ident("default") {
+                                return (true, None);
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
+
+    (false, None)
+}
+
 struct SynerArg<'a> {
     name: String,
     ident: &'a syn::Ident,
-    use_default: bool,
+    default: (bool, Option<syn::Expr>),
     ty: &'a syn::Type,
     inner_ty: &'a syn::Type,
     optional: bool,
@@ -41,10 +71,7 @@ impl<'a> SynerArg<'a> {
             return Err(syn::Error::new_spanned(field, "Expected a named field"));
         };
         let ty = &field.ty;
-        let use_default = field
-            .attrs
-            .iter()
-            .any(|attr| attr.path.is_ident("syner") && attr.tokens.to_string() == "(default)");
+        let default = parse_default_or_default_function(&field.attrs);
         let mut inner_ty = ty;
         let optional = if let syn::Type::Path(syn::TypePath { path, .. }) = inner_ty {
             if let Some(syn::PathSegment { ident, arguments }) = path.segments.last() {
@@ -78,7 +105,7 @@ impl<'a> SynerArg<'a> {
         Ok(Self {
             name,
             ident,
-            use_default,
+            default,
             optional,
             repeatable,
             ty,
@@ -208,7 +235,7 @@ impl<'a> SynerArg<'a> {
     fn parser_check(&self) -> Result<proc_macro2::TokenStream, syn::Error> {
         let ident = self.ident;
         let optional = self.optional;
-        let use_default = self.use_default;
+        let (use_default, _) = self.default;
 
         Ok(if optional || use_default {
             quote! {}
@@ -230,11 +257,17 @@ impl<'a> SynerArg<'a> {
     fn parser_convert(&self) -> Result<proc_macro2::TokenStream, syn::Error> {
         let ident = &self.ident;
         let optional = self.optional;
-        let use_default = self.use_default;
+        let (use_default, ref default) = self.default;
 
         Ok(if use_default {
-            quote! {
-                #ident: self.#ident.unwrap_or_default()
+            if let Some(default) = default {
+                quote! {
+                    #ident: self.#ident.unwrap_or_else(|| #default)
+                }
+            } else {
+                quote! {
+                    #ident: self.#ident.unwrap_or_default()
+                }
             }
         } else if optional {
             quote! {

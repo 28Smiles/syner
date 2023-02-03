@@ -1,6 +1,6 @@
 [package]
 name = "syner_derive"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Leon Camus <leon.c@gmx.de>"]
 keywords = ["proc_macro", "procmacro", "syn", "syner", "derive"]
@@ -14,5 +14,5 @@ proc-macro = true
 
 [dependencies]
 quote = "1"
-proc-macro2 = "1.0"
-syn = "1.0"
+proc-macro2 = "1"
+syn = "1"

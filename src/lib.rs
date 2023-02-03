@@ -35,6 +35,8 @@ mod tests {
         pub maybe: Option<String>,
         #[syner(default)]
         pub is_default: bool,
+        #[syner(default = "String::from(\"default\")")]
+        pub default: String,
         pub inner: Inner,
         pub inner_list: Vec<Inner>,
         pub inner_bools: Vec<bool>,
@@ -78,6 +80,7 @@ mod tests {
         assert_eq!(test.some, "hello");
         assert_eq!(test.maybe, None);
         assert_eq!(test.is_default, false);
+        assert_eq!(test.default, "default");
         assert_eq!(test.inner.some, "inner");
         assert_eq!(test.inner.is_default, true);
         assert_eq!(test.inner_list.len(), 3);

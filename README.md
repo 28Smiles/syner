@@ -81,6 +81,7 @@ Syner supports the following types:
  - `Vec<T>` - Parses the value as `<name>(T...)`
 
 Annotating a field with `#[syner(default)]` will make it optional and use the default value if it is not present.
+You can also use `#[syner(default = "<expr>")]` to specify a default value.
 The name of the field is used as the name of the attribute except if the field is of type `Vec<T>`, 
 in which case the name of the struct (`lowercase`) is used. 
 For the top level attribute the lowercase name of the struct is used.
