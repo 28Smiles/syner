@@ -668,7 +668,7 @@ pub fn derive_attribute_parser(input: TokenStream) -> TokenStream {
                 }
 
                 fn expected() -> String {
-                    std::format!("{}{}", #name_str, Self::expected_meta())
+                    std::format!("{}{}", #attribute_name_str, Self::expected_meta())
                 }
 
                 fn expected_meta() -> String {
