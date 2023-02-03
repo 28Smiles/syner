@@ -1,5 +1,10 @@
 pub use syner_derive::Syner;
 
+pub mod __private {
+    pub use proc_macro2;
+    pub use syn;
+}
+
 pub trait Syner {
     /// Parse this struct from an iterator of attributes.
     fn parse_attrs<'a>(
@@ -28,6 +33,12 @@ mod tests {
     use syn::{parse_quote, DeriveInput};
 
     use super::*;
+
+    // Definitions for the tests
+    mod syner {
+        pub use crate::Syner;
+        pub use crate::__private;
+    }
 
     #[derive(Syner)]
     #[syner(name = "test_attribute")]

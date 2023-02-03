@@ -237,18 +237,18 @@ impl<'a> SynerArg<'a> {
             if optional {
                 if repeatable {
                     let msg = format!("{}({{}}({{}}) /* <-- Expected 0..n times */) /* <-- Expected 0..1 times */", name);
-                    quote! { &std::format!(#msg, #inner_ty::name(), #inner_ty::expected_meta()) }
+                    quote! { &std::format!(#msg, <#inner_ty as syner::Syner>::name(), <#inner_ty as syner::Syner>::expected_meta()) }
                 } else {
                     let msg = format!("{}({{}}) /* <-- Expected 0..1 times */", name);
-                    quote! { &std::format!(#msg, #inner_ty::expected_meta()) }
+                    quote! { &std::format!(#msg, <#inner_ty as syner::Syner>::expected_meta()) }
                 }
             } else {
                 if repeatable {
                     let msg = format!("{}({{}}({{}}) /* <-- Expected 0..n times */)", name);
-                    quote! { &std::format!(#msg, #inner_ty::name(), #inner_ty::expected_meta()) }
+                    quote! { &std::format!(#msg, <#inner_ty as syner::Syner>::name(), <#inner_ty as syner::Syner>::expected_meta()) }
                 } else {
                     let msg = format!("{}({{}})", name);
-                    quote! { &std::format!(#msg, #inner_ty::expected_meta()) }
+                    quote! { &std::format!(#msg, <#inner_ty as syner::Syner>::expected_meta()) }
                 }
             }
         };
@@ -268,7 +268,7 @@ impl<'a> SynerArg<'a> {
             let expected = self.parser_expected()?;
             quote! {
                 if self.#ident.is_none() {
-                    errors.push(syn::Error::new_spanned(
+                    errors.push(syner::__private::syn::Error::new_spanned(
                         parent,
                         std::format!("Missing required argument {}", #expected)
                     ));
@@ -325,10 +325,10 @@ impl<'a> SynerArg<'a> {
         let primitive_value_parser = if let Some(type_ident) = type_ident {
             match type_ident.as_str() {
                 "bool" => Some(quote! {
-                    if let syn::Lit::Bool(syn::LitBool { value, .. }) = lit {
+                    if let syner::__private::syn::Lit::Bool(syner::__private::syn::LitBool { value, .. }) = lit {
                         *value
                     } else {
-                        errors.push(syn::Error::new_spanned(
+                        errors.push(syner::__private::syn::Error::new_spanned(
                             meta,
                             "Expected a boolean value"
                         ));
@@ -339,10 +339,10 @@ impl<'a> SynerArg<'a> {
                 | "u128" | "usize" => {
                     let error_msg = format!("Expected a number of type {}", type_ident.as_str());
                     Some(quote! {
-                        if let syn::Lit::Int(lit) = lit {
+                        if let syner::__private::syn::Lit::Int(lit) = lit {
                             value.base10_parse()
                         } else {
-                            errors.push(syn::Error::new_spanned(
+                            errors.push(syner::__private::syn::Error::new_spanned(
                                 meta,
                                 #error_msg
                             ));
@@ -353,10 +353,10 @@ impl<'a> SynerArg<'a> {
                 "f32" | "f64" => {
                     let error_msg = format!("Expected a number of type {}", type_ident.as_str());
                     Some(quote! {
-                        if let syn::Lit::Float(lit) = lit {
+                        if let syner::__private::syn::Lit::Float(lit) = lit {
                             value.base10_parse()
                         } else {
-                            errors.push(syn::Error::new_spanned(
+                            errors.push(syner::__private::syn::Error::new_spanned(
                                 meta,
                                 #error_msg
                             ));
@@ -365,10 +365,10 @@ impl<'a> SynerArg<'a> {
                     })
                 }
                 "char" => Some(quote! {
-                    if let syn::Lit::Char(lit) = lit {
+                    if let syner::__private::syn::Lit::Char(lit) = lit {
                         lit.value()
                     } else {
-                        errors.push(syn::Error::new_spanned(
+                        errors.push(syner::__private::syn::Error::new_spanned(
                             meta,
                             "Expected a char value"
                         ));
@@ -376,10 +376,10 @@ impl<'a> SynerArg<'a> {
                     }
                 }),
                 "String" => Some(quote! {
-                    if let syn::Lit::Str(lit) = lit {
+                    if let syner::__private::syn::Lit::Str(lit) = lit {
                         lit.value()
                     } else {
-                        errors.push(syn::Error::new_spanned(
+                        errors.push(syner::__private::syn::Error::new_spanned(
                             meta,
                             "Expected a string value"
                         ));
@@ -402,10 +402,10 @@ impl<'a> SynerArg<'a> {
         let value_parser = if let Some(primitive_value_parser) = &primitive_value_parser {
             let expected = self.parser_expected()?;
             quote! {
-                if let syn::Meta::NameValue(syn::MetaNameValue { lit, .. }) = meta {
+                if let syner::__private::syn::Meta::NameValue(syner::__private::syn::MetaNameValue { lit, .. }) = meta {
                     #primitive_value_parser
                 } else {
-                    errors.push(syn::Error::new_spanned(
+                    errors.push(syner::__private::syn::Error::new_spanned(
                         meta,
                         &std::format!("Expected Named Value {}", #expected),
                     ));
@@ -414,7 +414,7 @@ impl<'a> SynerArg<'a> {
             }
         } else {
             quote! {
-                match #inner_ty::parse_meta(meta) {
+                match <#inner_ty as syner::Syner>::parse_meta(meta) {
                     Ok(value) => value,
                     Err(err) => {
                         errors.extend(err);
@@ -428,7 +428,7 @@ impl<'a> SynerArg<'a> {
         let error_message_duplicate = format!("Duplicate field with name: {}", name);
         let repeat_guard = quote! {
             if self.#ident.is_some() {
-                errors.push(syn::Error::new_spanned(meta, #error_message_duplicate));
+                errors.push(syner::__private::syn::Error::new_spanned(meta, #error_message_duplicate));
                 return;
             }
         };
@@ -439,12 +439,12 @@ impl<'a> SynerArg<'a> {
                 quote! {
                     {
                         let mut value = Vec::new();
-                        if let syn::Meta::List(syn::MetaList { nested, .. }) = meta {
+                        if let syner::__private::syn::Meta::List(syner::__private::syn::MetaList { nested, .. }) = meta {
                             for meta in nested.iter() {
-                                if let syn::NestedMeta::Lit(lit) = meta {
+                                if let syner::__private::syn::NestedMeta::Lit(lit) = meta {
                                     value.push(#primitive_value_parser);
                                 } else {
-                                    errors.push(syn::Error::new_spanned(
+                                    errors.push(syner::__private::syn::Error::new_spanned(
                                         meta,
                                         "Expected a literal value"
                                     ));
@@ -452,7 +452,7 @@ impl<'a> SynerArg<'a> {
                                 }
                             }
                         } else {
-                            errors.push(syn::Error::new_spanned(
+                            errors.push(syner::__private::syn::Error::new_spanned(
                                 meta,
                                 "Expected a list of literals"
                             ));
@@ -465,12 +465,12 @@ impl<'a> SynerArg<'a> {
                 quote! {
                     {
                         let mut value = Vec::new();
-                        if let syn::Meta::List(syn::MetaList { nested, .. }) = meta {
+                        if let syner::__private::syn::Meta::List(syner::__private::syn::MetaList { nested, .. }) = meta {
                             for meta in nested.iter() {
-                                if let syn::NestedMeta::Meta(meta) = meta {
+                                if let syner::__private::syn::NestedMeta::Meta(meta) = meta {
                                     value.push(#value_parser);
                                 } else {
-                                    errors.push(syn::Error::new_spanned(
+                                    errors.push(syner::__private::syn::Error::new_spanned(
                                         meta,
                                         "Expected a meta value"
                                     ));
@@ -478,7 +478,7 @@ impl<'a> SynerArg<'a> {
                                 }
                             }
                         } else {
-                            errors.push(syn::Error::new_spanned(
+                            errors.push(syner::__private::syn::Error::new_spanned(
                                 meta,
                                 "Expected a list value"
                             ));
@@ -585,23 +585,23 @@ pub fn derive_attribute_parser(input: TokenStream) -> TokenStream {
             impl #parser {
                 fn new() -> Self { Self { #(#parser_init,)* } }
 
-                fn consume(&mut self, errors: &mut Vec<syn::Error>, path: &str, meta: &syn::Meta) {
+                fn consume(&mut self, errors: &mut Vec<syner::__private::syn::Error>, path: &str, meta: &syner::__private::syn::Meta) {
                     if let Some(ident) = meta.path().get_ident().map(|ident| ident.to_string()) {
                         match ident.as_str() {
                             #(#parser_match_arms)*
                             _ => {
-                                errors.push(syn::Error::new_spanned(
+                                errors.push(syner::__private::syn::Error::new_spanned(
                                     meta,
                                     "Unknown attribute"
                                 ));
                             }
                         }
                     } else {
-                        errors.push(syn::Error::new_spanned(meta, "Unsupported attribute type"));
+                        errors.push(syner::__private::syn::Error::new_spanned(meta, "Unsupported attribute type"));
                     }
                 }
 
-                fn complete(self, errors: &mut Vec<syn::Error>, parent: &syn::Meta) -> Result<#name, ()> {
+                fn complete(self, errors: &mut Vec<syner::__private::syn::Error>, parent: &syner::__private::syn::Meta) -> Result<#name, ()> {
                     let mut encountered_error = false;
                     #(#parser_check)*
 
@@ -617,15 +617,15 @@ pub fn derive_attribute_parser(input: TokenStream) -> TokenStream {
 
             impl Syner for #name {
                 fn parse_attrs<'a>(
-                    attrs: impl IntoIterator<Item = &'a syn::Attribute> + 'a,
-                ) -> Result<Self, Vec<syn::Error>> {
+                    attrs: impl IntoIterator<Item = &'a syner::__private::syn::Attribute> + 'a,
+                ) -> Result<Self, Vec<syner::__private::syn::Error>> {
                     let mut parser = #parser::new();
                     let mut errors = Vec::new();
                     let attrs = attrs.into_iter()
                         .filter(|attr| attr.path.is_ident(#attribute_name))
                         .filter_map(|attr| {
                             let meta = attr.parse_meta().ok()?;
-                            if let syn::Meta::List(syn::MetaList { nested, .. }) = meta {
+                            if let syner::__private::syn::Meta::List(syner::__private::syn::MetaList { nested, .. }) = meta {
                                 Some(nested)
                             } else {
                                 None
@@ -635,11 +635,11 @@ pub fn derive_attribute_parser(input: TokenStream) -> TokenStream {
                         .collect::<Vec<_>>();
                     for attr in attrs.iter() {
                         match &attr {
-                            syn::NestedMeta::Meta(meta) => {
+                            syner::__private::syn::NestedMeta::Meta(meta) => {
                                 parser.consume(&mut errors, #attribute_name, meta)
                             },
-                            syn::NestedMeta::Lit(lit) => {
-                                errors.push(syn::Error::new_spanned(
+                            syner::__private::syn::NestedMeta::Lit(lit) => {
+                                errors.push(syner::__private::syn::Error::new_spanned(
                                     lit,
                                     "Unexpected literal"
                                 ));
@@ -652,12 +652,12 @@ pub fn derive_attribute_parser(input: TokenStream) -> TokenStream {
                     } else {
                         let first = attrs.first().unwrap();
                         match &first {
-                            syn::NestedMeta::Meta(meta) => {
+                            syner::__private::syn::NestedMeta::Meta(meta) => {
                                 let result = parser.complete(&mut errors, meta);
 
                                 result.map_err(|_| errors)
                             },
-                            syn::NestedMeta::Lit(lit) => {
+                            syner::__private::syn::NestedMeta::Lit(lit) => {
                                 Err(errors)
                             },
                         }
@@ -665,19 +665,19 @@ pub fn derive_attribute_parser(input: TokenStream) -> TokenStream {
                 }
 
                 fn parse_meta(
-                    input: &syn::Meta
-                ) -> Result<Self, Vec<syn::Error>> {
+                    input: &syner::__private::syn::Meta
+                ) -> Result<Self, Vec<syner::__private::syn::Error>> {
                     match input {
-                        syn::Meta::List(list) => {
+                        syner::__private::syn::Meta::List(list) => {
                             let mut parser = #parser::new();
                             let mut errors = Vec::new();
                             for meta in &list.nested {
                                 match meta {
-                                    syn::NestedMeta::Meta(meta) => {
+                                    syner::__private::syn::NestedMeta::Meta(meta) => {
                                         parser.consume(&mut errors, #attribute_name, meta);
                                     }
-                                    syn::NestedMeta::Lit(lit) => {
-                                        errors.push(syn::Error::new_spanned(lit, "Expected meta"));
+                                    syner::__private::syn::NestedMeta::Lit(lit) => {
+                                        errors.push(syner::__private::syn::Error::new_spanned(lit, "Expected meta"));
                                     }
                                 }
                             }
@@ -687,13 +687,13 @@ pub fn derive_attribute_parser(input: TokenStream) -> TokenStream {
                             result.map_err(|_| errors)
                         }
                         _ => {
-                            Err(vec![syn::Error::new_spanned(input, "Expected list")])
+                            Err(vec![syner::__private::syn::Error::new_spanned(input, "Expected list")])
                         }
                     }
                 }
 
                 fn expected() -> String {
-                    std::format!("{}{}", #attribute_name, Self::expected_meta())
+                    std::format!("{}{}", #attribute_name, <Self as syner::Syner>::expected_meta())
                 }
 
                 fn expected_meta() -> String {
