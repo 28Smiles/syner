@@ -47,6 +47,31 @@ fn parse_default_or_default_function(attrs: &[syn::Attribute]) -> (bool, Option<
     (false, None)
 }
 
+fn parse_name_from_args(args: &[syn::Attribute]) -> Option<String> {
+    for arg in args {
+        if let Ok(syn::Meta::List(syn::MetaList { path, nested, .. })) = arg.parse_meta() {
+            if path.is_ident("syner") {
+                for nested in nested {
+                    match nested {
+                        syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue {
+                            path,
+                            lit: syn::Lit::Str(lit),
+                            ..
+                        })) => {
+                            if path.is_ident("name") {
+                                return Some(lit.value());
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
+
+    None
+}
+
 struct SynerArg<'a> {
     name: String,
     ident: &'a syn::Ident,
@@ -495,8 +520,8 @@ pub fn derive_attribute_parser(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     if let syn::Data::Struct(data) = input.data {
         let name = &input.ident;
-        let name_str = format!("__{}Syner", name);
-        let attribute_name_str = name.to_string().to_ascii_lowercase();
+        let attribute_name_str = parse_name_from_args(&input.attrs)
+            .unwrap_or_else(|| name.to_string().to_ascii_lowercase());
         let attribute_name = &attribute_name_str;
         let parser = syn::Ident::new(&format!("__{}Syner", name), Span::call_site());
         let mut errors = Vec::new();
@@ -668,7 +693,7 @@ pub fn derive_attribute_parser(input: TokenStream) -> TokenStream {
                 }
 
                 fn expected() -> String {
-                    std::format!("{}{}", #attribute_name_str, Self::expected_meta())
+                    std::format!("{}{}", #attribute_name, Self::expected_meta())
                 }
 
                 fn expected_meta() -> String {
@@ -683,7 +708,7 @@ pub fn derive_attribute_parser(input: TokenStream) -> TokenStream {
                 }
 
                 fn name() -> &'static str {
-                    #name_str
+                    #attribute_name
                 }
             }
         };

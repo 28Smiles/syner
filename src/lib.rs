@@ -30,6 +30,7 @@ mod tests {
     use super::*;
 
     #[derive(Syner)]
+    #[syner(name = "test_attribute")]
     struct Test {
         pub some: String,
         pub maybe: Option<String>,
@@ -52,7 +53,7 @@ mod tests {
     #[test]
     fn test_correct() {
         let input: DeriveInput = parse_quote! {
-            #[test(
+            #[test_attribute(
                 some = "hello",
                 inner(
                     some = "inner",
@@ -100,7 +101,7 @@ mod tests {
     #[test]
     fn test_duplicate() {
         let input: DeriveInput = parse_quote! {
-            #[test(
+            #[test_attribute(
                 some = "hello",
                 some = "hello",
                 inner(
@@ -122,7 +123,7 @@ mod tests {
     #[test]
     fn test_missing() {
         let input: DeriveInput = parse_quote! {
-            #[test(
+            #[test_attribute(
                 inner(
                     some = "inner",
                     is_default = true
@@ -153,7 +154,7 @@ mod tests {
     #[test]
     fn test_wrong_type() {
         let input: DeriveInput = parse_quote! {
-            #[test(
+            #[test_attribute(
                 some = "hello",
                 inner(
                     some = "inner",
@@ -186,7 +187,7 @@ mod tests {
     #[test]
     fn test_wrong_type_meta() {
         let input: DeriveInput = parse_quote! {
-            #[test(
+            #[test_attribute(
                 some = "hello",
                 inner(
                     some = "inner",

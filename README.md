@@ -84,7 +84,8 @@ Annotating a field with `#[syner(default)]` will make it optional and use the de
 You can also use `#[syner(default = "<expr>")]` to specify a default value.
 The name of the field is used as the name of the attribute except if the field is of type `Vec<T>`, 
 in which case the name of the struct (`lowercase`) is used. 
-For the top level attribute the lowercase name of the struct is used.
+For the top level attribute the lowercase name of the struct is used as a default name.
+If you want to use a different name you can annotate the struct with `#[syner(name = "<name>")]`.
 
 ## License
 
