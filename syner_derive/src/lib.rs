@@ -601,7 +601,7 @@ pub fn derive_attribute_parser(input: TokenStream) -> TokenStream {
                     }
                 }
 
-                fn complete(self, errors: &mut Vec<syner::__private::syn::Error>, parent: &syner::__private::syn::Meta) -> ::std::prelude::Result<#name, ()> {
+                fn complete(self, errors: &mut Vec<syner::__private::syn::Error>, parent: &syner::__private::syn::Meta) -> ::std::result::Result<#name, ()> {
                     let mut encountered_error = false;
                     #(#parser_check)*
 
@@ -618,7 +618,7 @@ pub fn derive_attribute_parser(input: TokenStream) -> TokenStream {
             impl Syner for #name {
                 fn parse_attrs<'a>(
                     attrs: impl IntoIterator<Item = &'a syner::__private::syn::Attribute> + 'a,
-                ) -> ::std::prelude::Result<Self, Vec<syner::__private::syn::Error>> {
+                ) -> ::std::result::Result<Self, Vec<syner::__private::syn::Error>> {
                     let mut parser = #parser::new();
                     let mut errors = Vec::new();
                     let attrs = attrs.into_iter()
@@ -666,7 +666,7 @@ pub fn derive_attribute_parser(input: TokenStream) -> TokenStream {
 
                 fn parse_meta(
                     input: &syner::__private::syn::Meta
-                ) -> ::std::prelude::Result<Self, Vec<syner::__private::syn::Error>> {
+                ) -> ::std::result::Result<Self, Vec<syner::__private::syn::Error>> {
                     match input {
                         syner::__private::syn::Meta::List(list) => {
                             let mut parser = #parser::new();
