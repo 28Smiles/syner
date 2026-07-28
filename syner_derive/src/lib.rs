@@ -339,7 +339,7 @@ impl<'a> SynerArg<'a> {
                 | "u128" | "usize" => {
                     let error_msg = format!("Expected a number of type {}", type_ident.as_str());
                     Some(quote! {
-                        if let syner::__private::syn::Lit::Int(lit) = lit {
+                        if let syner::__private::syn::Lit::Int(value) = lit {
                             value.base10_parse()
                         } else {
                             errors.push(syner::__private::syn::Error::new_spanned(
@@ -353,7 +353,7 @@ impl<'a> SynerArg<'a> {
                 "f32" | "f64" => {
                     let error_msg = format!("Expected a number of type {}", type_ident.as_str());
                     Some(quote! {
-                        if let syner::__private::syn::Lit::Float(lit) = lit {
+                        if let syner::__private::syn::Lit::Float(value) = lit {
                             value.base10_parse()
                         } else {
                             errors.push(syner::__private::syn::Error::new_spanned(
